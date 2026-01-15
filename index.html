@@ -1,0 +1,273 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pet Paradise</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <style>
+        @tailwind base;
+        @tailwind components;
+        @tailwind utilities;
+
+        @layer base {
+            html {
+                scroll-behavior: smooth;
+            }
+        }
+
+        body {
+            font-family: sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        /* Bento Grid Styles */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Adjust minmax as needed */
+            grid-gap: 1rem;
+        }
+
+        .bento-item {
+            background-color: #fff;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease-in-out;
+            will-change: transform; /* hint for performance */
+        }
+
+        .bento-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .bento-item.featured {
+            grid-column: span 2;
+        }
+    </style>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        .slide-in-left {
+            animation: slideInFromLeft 0.5s ease-out forwards;
+        }
+
+        .slide-in-right {
+            animation: slideInFromRight 0.5s ease-out forwards;
+        }
+
+        ::view-transition-old(root) {
+            animation: fadeOut ease both 250ms;
+        }
+
+        ::view-transition-new(root) {
+            animation: fadeIn ease both 250ms;
+        }
+    </style>
+    <meta name="view-transition" content="origin-trial-token">
+</head>
+<body x-data="{
+    page: 'home',
+    petName: '',
+    petType: 'cat',
+    petHappiness: 50,
+    petHunger: 50,
+    lastInteraction: Date.now(),
+    storeItems: [
+        { id: 1, name: 'Fish Flakes', price: 10, type: 'food', description: 'Yummy fish flakes for cats!' },
+        { id: 2, name: 'Chew Toy', price: 15, type: 'toy', description: 'Keeps your pet entertained.' },
+        { id: 3, name: 'Scratching Post', price: 20, type: 'toy', description: 'A perfect place for scratching.' },
+        { id: 4, name: 'Cozy Bed', price: 25, type: 'furniture', description: 'A comfortable bed for your pet.' }
+    ],
+    inventory: [],
+    money: 50,
+
+    startGame(name, type) {
+        this.petName = name;
+        this.petType = type;
+        this.page = 'pet';
+        this.startPetLifecycle();
+    },
+
+    startPetLifecycle() {
+         setInterval(() => {
+            if(this.page === 'pet'){
+                this.petHunger = Math.min(100, this.petHunger + 1);
+                this.petHappiness = Math.max(0, this.petHappiness - 1);
+
+                if (this.petHunger >= 90) {
+                     alert('Your pet is very hungry!');
+                }
+                if (this.petHappiness <= 10) {
+                     alert('Your pet is very unhappy!');
+                }
+            }
+
+        }, 5000);
+    },
+
+    feedPet() {
+        this.petHunger = Math.max(0, this.petHunger - 20);
+        this.petHappiness = Math.min(100, this.petHappiness + 10);
+        this.lastInteraction = Date.now();
+    },
+
+    playWithPet() {
+        this.petHappiness = Math.min(100, this.petHappiness + 20);
+        this.petHunger = Math.min(100, this.petHunger + 5);
+        this.lastInteraction = Date.now();
+    },
+
+    goToStore() {
+        this.page = 'store';
+    },
+
+    buyItem(item) {
+        if (this.money >= item.price) {
+            this.money -= item.price;
+            this.inventory.push(item);
+            alert('You bought ' + item.name + '!');
+        } else {
+            alert('Not enough money!');
+        }
+    },
+
+    useItem(item) {
+       const index = this.inventory.indexOf(item);
+        if (index > -1) {
+            this.inventory.splice(index, 1);
+             if (item.type === 'food') {
+                 this.feedPet();
+            } else if (item.type === 'toy') {
+                this.playWithPet();
+            }
+
+            alert('You used ' + item.name + '!');
+        } else {
+           alert('You dont have this item.');
+        }
+
+    },
+
+    goToInventory() {
+        this.page = 'inventory';
+    },
+
+    goHome() {
+        this.page = 'pet';
+    }
+}">
+
+    <header class="bg-white shadow-md py-4 px-6">
+        <h1 class="text-2xl font-bold text-gray-800 transition-all" :class="{'text-3xl': page !== 'home'}">Pet Paradise</h1>
+        <nav x-show="page !== 'home'" class="mt-2">
+            <button @click="goHome()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2 transition-colors">Home</button>
+            <button @click="goToStore()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mr-2 transition-colors">Store</button>
+            <button @click="goToInventory()" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition-colors">Inventory</button>
+        </nav>
+        <div x-show="page === 'pet'" class="mt-2">
+            <p class="text-gray-600">Money: $<span x-text="money"></span></p>
+        </div>
+
+    </header>
+
+    <main class="container mx-auto mt-8 p-6">
+
+        <!-- Home Page -->
+        <section x-show="page === 'home'" class="fade-in">
+            <h2 class="text-xl font-semibold mb-4 text-gray-700">Create Your Pet</h2>
+            <div class="space-y-4">
+                <div>
+                    <label for="petName" class="block text-gray-700 text-sm font-bold mb-2">Pet Name:</label>
+                    <input type="text" id="petName" x-model="petName" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Pet Type:</label>
+                    <select x-model="petType" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <option value="cat">Cat</option>
+                        <option value="dog">Dog</option>
+                        <option value="rabbit">Rabbit</option>
+                    </select>
+                </div>
+                <button @click="startGame(petName, petType)" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors">Start Game</button>
+            </div>
+        </section>
+
+        <!-- Pet Page -->
+        <section x-show="page === 'pet'" class="fade-in">
+            <h2 class="text-xl font-semibold mb-4 text-gray-700" x-text="petName"></h2>
+            <div class="flex items-center space-x-4">
+                <img :src="petType === 'cat' ? 'https://cataas.com/cat/gif' : (petType === 'dog' ? 'https://dog.ceo/api/breeds/image/random' : 'https://place.dog/400/300')" alt="Pet Image" class="w-48 h-48 rounded-full object-cover border-4 border-blue-200">
+
+                <div>
+                    <p class="text-gray-600">Type: <span x-text="petType"></span></p>
+                    <p class="text-gray-600">Happiness: <span x-text="petHappiness"></span></p>
+                    <p class="text-gray-600">Hunger: <span x-text="petHunger"></span></p>
+                    <p class="text-gray-600">Last Interaction: <span x-text="new Date(lastInteraction).toLocaleTimeString()"></span></p>
+
+                    <div class="mt-4 space-x-2">
+                        <button @click="feedPet()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors">Feed</button>
+                        <button @click="playWithPet()" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors">Play</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Store Page -->
+        <section x-show="page === 'store'" class="fade-in">
+            <h2 class="text-xl font-semibold mb-4 text-gray-700">Pet Store</h2>
+            <div class="bento-grid">
+                <template x-for="item in storeItems" :key="item.id">
+                    <div class="bento-item">
+                        <h3 class="font-semibold text-gray-800" x-text="item.name"></h3>
+                        <p class="text-gray-600" x-text="item.description"></p>
+                        <p class="text-gray-600">Price: $<span x-text="item.price"></span></p>
+                        <button @click="buyItem(item)" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-2 focus:outline-none focus:shadow-outline transition-colors">Buy</button>
+                    </div>
+                </template>
+            </div>
+        </section>
+
+        <!-- Inventory Page -->
+        <section x-show="page === 'inventory'" class="fade-in">
+            <h2 class="text-xl font-semibold mb-4 text-gray-700">Inventory</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <template x-for="item in inventory" :key="item.id">
+                    <div class="bg-white rounded-lg shadow-md p-4">
+                        <h3 class="font-semibold text-gray-800" x-text="item.name"></h3>
+                        <p class="text-gray-600" x-text="item.description"></p>
+                        <button @click="useItem(item)" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-2 focus:outline-none focus:shadow-outline transition-colors">Use</button>
+                    </div>
+                </template>
+                <div x-show="inventory.length === 0" class="text-gray-500 italic">Your inventory is empty.</div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-100 py-4 text-center text-gray-500 mt-8">
+        <p>&copy; 2026 Pet Paradise</p>
+    </footer>
+
+</body>
+</html>
